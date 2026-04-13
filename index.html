@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LIOR CEYLON | Premium Streetwear Sri Lanka</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter'], serif: ['Playfair Display'] },
+                    colors: { 'lior-black': '#0a0a0a', 'lior-dark': '#141414', 'lior-gray': '#1f1f1f', 'lior-accent': '#c9a962' }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #0a0a0a; color: #ffffff; }
+        .nav-blur { backdrop-filter: blur(20px); background: rgba(10, 10, 10, 0.9); }
+        .hero-slide { position: absolute; inset: 0; opacity: 0; transition: opacity 1s ease-in-out; z-index: 0; }
+        .hero-slide.active { opacity: 1; z-index: 1; }
+        .slider-dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.3); cursor: pointer; transition: all 0.3s; }
+        .slider-dot.active { background: #c9a962; transform: scale(1.2); }
+        .page { display: none; animation: fadeIn 0.5s ease; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .scroll-reveal { opacity: 0; transform: translateY(30px); transition: all 0.8s ease; }
+        .scroll-reveal.active { opacity: 1; transform: translateY(0); }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0a0a0a; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+        .category-dropdown-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
+        .category-dropdown-content.show { max-height: 300px; }
+        .close-product { position: fixed; top: 100px; right: 30px; z-index: 100; background: #1f1f1f; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .close-product:hover { background: #c9a962; color: #0a0a0a; }
+        .toast { position: fixed; bottom: 30px; right: 30px; background: #c9a962; color: #0a0a0a; padding: 12px 24px; border-radius: 8px; font-weight: bold; z-index: 1000; display: none; }
+        .original-price { text-decoration: line-through; color: #9ca3af; font-size: 14px; margin-right: 8px; }
+        .discount-price { color: #10b981; font-weight: bold; font-size: 18px; }
+        .final-price { color: #c9a962; font-weight: bold; font-size: 18px; }
+        .size-btn { transition: all 0.2s; }
+        .size-btn.selected { background-color: #c9a962; color: #0a0a0a; border-color: #c9a962; }
+        .size-btn.disabled { opacity: 0.5; cursor: not-allowed; }
+        .old-price-cross { text-decoration: line-through; color: #9ca3af; font-size: 14px; margin-right: 8px; }
+        .sale-price { color: #10b981; font-weight: bold; font-size: 18px; }
+    </style>
+</head>
+<body>
+
+    <div id="toastMsg" class="toast"></div>
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 nav-blur py-4 border-b border-gray-800">
+        <div class="max-w-7xl mx-auto px-6 lg:px-8">
+            <div class="flex justify-between items-center">
+                <a href="#" onclick="showPage('home')" class="text-2xl font-serif font-bold tracking-wider text-white hover:text-lior-accent transition-colors store-name">
+                    LIOR <span class="text-lior-accent">CEYLON</span>
+                </a>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#" onclick="showPage('home')" class="text-sm uppercase tracking-widest hover:text-lior-accent">Home</a>
+                    <a href="#" onclick="showPage('collection')" class="text-sm uppercase tracking-widest hover:text-lior-accent">Collection</a>
+                    <a href="#" onclick="showPage('new-arrivals')" class="text-sm uppercase tracking-widest hover:text-lior-accent">New Arrivals</a>
+                    <a href="#" onclick="showPage('about')" class="text-sm uppercase tracking-widest hover:text-lior-accent">About</a>
+                    <a href="#" onclick="showPage('contact')" class="text-sm uppercase tracking-widest hover:text-lior-accent">Contact</a>
+                </div>
+                <div class="flex items-center space-x-6">
+                    <a href="#" onclick="showPage('search')" class="hover:text-lior-accent"><i class="fas fa-search text-lg"></i></a>
+                    <a href="#" onclick="showPage('account')" class="hover:text-lior-accent relative">
+                        <i class="fas fa-user text-lg"></i>
+                        <span id="userStatusDot" class="absolute -top-1 -right-1 w-2 h-2 bg-gray-500 rounded-full"></span>
+                    </a>
+                    <a href="#" onclick="showPage('cart')" class="relative hover:text-lior-accent">
+                        <i class="fas fa-shopping-bag text-lg"></i>
+                        <span id="cart-count" class="absolute -top-2 -right-2 bg-lior-accent text-lior-black text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold">0</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- HOME PAGE -->
+    <div id="home" class="page active">
+        <section class="relative h-screen flex items-center justify-center overflow-hidden">
+            <div id="heroSliderContainer" class="relative w-full h-full"></div>
+            <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 flex space-x-4 z-20" id="sliderDots"></div>
+            <button onclick="prevSlide()" class="absolute left-4 top-1/2 transform -translate-y-1/2 z-20 text-white/50 hover:text-white text-4xl"><i class="fas fa-chevron-left"></i></button>
+            <button onclick="nextSlide()" class="absolute right-4 top-1/2 transform -translate-y-1/2 z-20 text-white/50 hover:text-white text-4xl"><i class="fas fa-chevron-right"></i></button>
+        </section>
+
+        <section class="py-20 px-6 lg:px-8 bg-lior-black">
+            <div class="max-w-7xl mx-auto">
+                <div class="text-center mb-16 scroll-reveal">
+                    <p class="text-lior-accent uppercase tracking-[0.3em] text-sm mb-4">Shop by Category</p>
+                    <h2 class="font-serif text-4xl md:text-5xl font-bold">OUR COLLECTIONS</h2>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4" id="categoriesGrid"></div>
+            </div>
+        </section>
+
+        <section class="py-20 px-6 lg:px-8 bg-lior-dark">
+            <div class="max-w-7xl mx-auto">
+                <div class="flex justify-between items-end mb-12 scroll-reveal">
+                    <div>
+                        <p class="text-lior-accent uppercase tracking-[0.3em] text-sm mb-4">New Drops</p>
+                        <h2 class="font-serif text-4xl md:text-5xl font-bold">FEATURED PRODUCTS</h2>
+                    </div>
+                    <button onclick="showPage('collection')" class="text-sm uppercase tracking-widest hover:text-lior-accent transition-colors border-b border-lior-accent pb-1">View All</button>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8" id="featured-products"></div>
+            </div>
+        </section>
+
+        <section class="py-20 px-6 lg:px-8 bg-lior-dark border-t border-gray-800">
+            <div class="max-w-4xl mx-auto text-center scroll-reveal">
+                <i class="fas fa-envelope text-4xl text-lior-accent mb-6"></i>
+                <h2 class="font-serif text-3xl md:text-4xl font-bold mb-4">JOIN THE INNER CIRCLE</h2>
+                <p class="text-gray-400 mb-8">Subscribe for exclusive offers and early access to drops.</p>
+                <form onsubmit="handleSubscribe(event)" class="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto">
+                    <input type="email" id="subscribeEmail" placeholder="Enter your email" required class="flex-1 px-6 py-4 bg-lior-black border border-gray-700 text-white rounded">
+                    <button type="submit" class="px-8 py-4 bg-lior-accent text-lior-black font-bold uppercase tracking-widest hover:bg-white rounded">Subscribe</button>
+                </form>
+            </div>
+        </section>
+    </div>
+
+    <!-- COLLECTION PAGE -->
+    <div id="collection" class="page">
+        <div class="pt-32 pb-12 px-6 lg:px-8 bg-lior-dark"><div class="max-w-7xl mx-auto text-center"><p class="text-lior-accent uppercase tracking-[0.3em] text-sm mb-4">Spring/Summer 2026</p><h1 class="font-serif text-5xl md:text-6xl font-bold mb-4">ALL COLLECTIONS</h1></div></div>
+        <div class="sticky top-16 z-40 bg-lior-black border-b border-gray-800 py-4 px-6 lg:px-8"><div class="max-w-7xl mx-auto"><button onclick="toggleCategoryDropdown()" class="flex items-center gap-2 px-6 py-2 border border-lior-accent bg-lior-accent text-lior-black text-sm uppercase tracking-widest font-semibold rounded mx-auto">ALL <i id="dropdownArrow" class="fas fa-chevron-down ml-2 transition-transform"></i></button><div id="categoryDropdown" class="category-dropdown-content mt-4 flex flex-wrap gap-4 justify-center"></div></div></div>
+        <section class="py-12 px-6 lg:px-8 bg-lior-black min-h-screen"><div class="max-w-7xl mx-auto"><div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8"></div></div></section>
+    </div>
+
+    <!-- NEW ARRIVALS PAGE -->
+    <div id="new-arrivals" class="page"><div class="pt-32 pb-12 px-6 lg:px-8 bg-lior-dark text-center"><h1 class="font-serif text-5xl font-bold">NEW ARRIVALS</h1></div><section class="py-12 px-6"><div id="new-arrivals-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto"></div></section></div>
+
+    <!-- ABOUT PAGE -->
+    <div id="about" class="page"><div class="pt-32 pb-12 px-6 lg:px-8 bg-lior-dark text-center"><h1 class="font-serif text-5xl font-bold">ABOUT US</h1><p class="text-gray-400 mt-4">Premium streetwear from Sri Lanka since 2023</p></div><section class="py-20 px-6 lg:px-8 bg-lior-black"><div class="max-w-7xl mx-auto"><div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-20"><div><div class="relative"><img src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1000&q=80" class="w-full h-[600px] object-cover rounded"><div class="absolute -bottom-6 -right-6 w-48 h-48 bg-lior-accent/10 border border-lior-accent/30 rounded"></div><div class="absolute -top-6 -left-6 w-48 h-48 border border-white/20 rounded"></div></div></div><div><p class="text-lior-accent uppercase tracking-[0.3em] text-sm mb-4">Est. 2023</p><h2 class="font-serif text-4xl md:text-5xl font-bold mb-6">REDEFINING MODERN STYLE</h2><p class="text-gray-300 mb-6 leading-relaxed">Founded in Sri Lanka, LIOR CEYLON is a contemporary fashion label built on the philosophy of refined simplicity and modern versatility.
+
+Our vision is to redefine everyday wear by creating pieces that move effortlessly with your lifestyle from active moments to professional settings and beyond. Each design reflects a balance of performance, comfort, and understated luxury.
+
+Driven by precision, quality craftsmanship, and timeless aesthetics, we focus on delivering apparel that feels as good as it looks. Every detail is considered, every piece intentional.
+
+At LIOR CEYLON, we believe style is more than appearance it is a reflection of identity, confidence, and purpose.</p><div class="grid grid-cols-3 gap-8 mb-8"><div class="text-center"><h4 class="font-serif text-3xl font-bold text-lior-accent mb-2">100%</h4><p class="text-xs uppercase tracking-widest text-gray-400">Premium Quality</p></div><div class="text-center"><h4 class="font-serif text-3xl font-bold text-lior-accent mb-2">8</h4><p class="text-xs uppercase tracking-widest text-gray-400">Categories</p></div><div class="text-center"><h4 class="font-serif text-3xl font-bold text-lior-accent mb-2">20K+</h4><p class="text-xs uppercase tracking-widest text-gray-400">Happy Customers</p></div></div></div></div></div></section></div>
+
+    <!-- CONTACT PAGE -->
+    <div id="contact" class="page">
+        <div class="pt-32 pb-12 px-6 lg:px-8 bg-lior-dark"><div class="max-w-7xl mx-auto text-center"><h1 class="font-serif text-5xl md:text-6xl font-bold mb-4">GET IN TOUCH</h1><p class="text-gray-400">We'd love to hear from you</p></div></div>
+        <section class="py-20 px-6 lg:px-8 bg-lior-black">
+            <div class="max-w-7xl mx-auto">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
+                    <div><h3 class="font-serif text-2xl font-bold mb-8">Contact Information</h3><div class="space-y-8 mb-12"><div class="flex items-start space-x-4"><div class="w-12 h-12 rounded-full bg-lior-dark flex items-center justify-center text-lior-accent"><i class="fas fa-map-marker-alt text-xl"></i></div><div><h4 class="font-bold mb-1">Flagship Store</h4><p class="text-gray-400 contact-address">Colombo 03, Sri Lanka</p></div></div><div class="flex items-start space-x-4"><div class="w-12 h-12 rounded-full bg-lior-dark flex items-center justify-center text-lior-accent"><i class="fas fa-phone text-xl"></i></div><div><h4 class="font-bold mb-1">Phone</h4><p class="text-gray-400 contact-phone">+94 77 123 4567</p></div></div><div class="flex items-start space-x-4"><div class="w-12 h-12 rounded-full bg-lior-dark flex items-center justify-center text-lior-accent"><i class="fas fa-envelope text-xl"></i></div><div><h4 class="font-bold mb-1">Email</h4><p class="text-gray-400 contact-email">hello@liorceylon.lk</p></div></div></div><h4 class="font-bold mb-4">Follow Us</h4><div class="flex space-x-4"><a href="#" target="_blank" class="social-facebook w-12 h-12 rounded-full bg-lior-dark flex items-center justify-center hover:bg-lior-accent hover:text-lior-black"><i class="fab fa-facebook-f text-xl"></i></a><a href="#" target="_blank" class="social-instagram w-12 h-12 rounded-full bg-lior-dark flex items-center justify-center hover:bg-lior-accent hover:text-lior-black"><i class="fab fa-instagram text-xl"></i></a><a href="#" target="_blank" class="social-tiktok w-12 h-12 rounded-full bg-lior-dark flex items-center justify-center hover:bg-lior-accent hover:text-lior-black"><i class="fab fa-tiktok text-xl"></i></a><a href="#" target="_blank" class="social-whatsapp w-12 h-12 rounded-full bg-lior-dark flex items-center justify-center hover:bg-lior-accent hover:text-lior-black"><i class="fab fa-whatsapp text-xl"></i></a></div></div>
+                    <div class="bg-lior-dark p-8 rounded-lg"><h3 class="font-serif text-2xl font-bold mb-6">Send us a Message</h3><form id="contactForm" onsubmit="sendContact(event)" class="space-y-6"><div class="grid grid-cols-2 gap-6"><input type="text" id="contactFirstName" placeholder="First Name" required class="w-full px-4 py-3 bg-lior-black border border-gray-700 rounded text-white"><input type="text" id="contactLastName" placeholder="Last Name" required class="w-full px-4 py-3 bg-lior-black border border-gray-700 rounded text-white"></div><input type="email" id="contactEmailField" placeholder="Email" required class="w-full px-4 py-3 bg-lior-black border border-gray-700 rounded text-white"><input type="text" id="contactPhoneField" placeholder="Phone" class="w-full px-4 py-3 bg-lior-black border border-gray-700 rounded text-white"><textarea id="contactMessage" rows="5" required placeholder="Your message..." class="w-full px-4 py-3 bg-lior-black border border-gray-700 rounded text-white"></textarea><button type="submit" class="w-full bg-lior-accent text-lior-black py-4 font-bold uppercase tracking-widest hover:bg-white rounded">Send Message</button></form></div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- CART PAGE -->
+    <div id="cart" class="page"><div class="pt-32 pb-12 px-6 lg:px-8 bg-lior-dark"><div class="max-w-7xl mx-auto"><h1 class="font-serif text-4xl md:text-5xl font-bold mb-4">SHOPPING CART</h1></div></div><section class="py-12 px-6 lg:px-8 bg-lior-black min-h-screen"><div class="max-w-7xl mx-auto"><div class="grid grid-cols-1 lg:grid-cols-3 gap-12"><div class="lg:col-span-2"><div id="cart-items-container" class="space-y-6"></div><div class="mt-8 flex justify-between border-t border-gray-800 pt-8"><button onclick="showPage('collection')" class="text-lior-accent"><i class="fas fa-arrow-left mr-2"></i> Continue Shopping</button><button onclick="clearCart()" class="text-red-500 text-sm">Clear Cart</button></div></div><div class="lg:col-span-1"><div class="bg-lior-dark p-8 rounded-lg sticky top-32"><h3 class="font-serif text-2xl font-bold mb-6">Order Summary</h3><div class="space-y-4 mb-6"><div class="flex justify-between text-gray-400"><span>Subtotal</span><span id="subtotal">LKR 0.00</span></div><div class="flex justify-between text-gray-400"><span>Shipping</span><span id="shipping">LKR 0</span></div><div class="flex justify-between text-gray-400"><span>Tax</span><span id="tax">LKR 0.00</span></div></div><div class="border-t border-gray-700 pt-4 mb-6"><div class="flex justify-between text-xl font-bold"><span>Total</span><span id="cart-total">LKR 0.00</span></div></div><button onclick="showPage('checkout')" class="w-full bg-lior-accent text-lior-black py-4 font-bold uppercase rounded">Proceed to Checkout</button></div></div></div></div></section></div>
+
+    <!-- CHECKOUT PAGE -->
+    <div id="checkout" class="page"><div class="pt-32 pb-12 px-6 lg:px-8 bg-lior-dark"><div class="max-w-7xl mx-auto"><h1 class="font-serif text-4xl md:text-5xl font-bold mb-4">CHECKOUT</h1></div></div><section class="py-12 px-6 lg:px-8 bg-lior-black min-h-screen"><div class="max-w-7xl mx-auto"><div class="grid grid-cols-1 lg:grid-cols-2 gap-12"><div class="space-y-8"><div class="bg-lior-dark p-8 rounded-lg"><h3 class="font-serif text-xl font-bold mb-6">Contact Information</h3><input type="email" id="checkoutEmail" placeholder="Email" class="w-full px-4 py-3 bg-lior-black border border-gray-700 rounded text-white"></div><div class="bg-lior-dark p-8 rounded-lg"><h3 class="font-serif text-xl font-bold mb-6">Shipping Address</h3><div class="grid grid-cols-2 gap-4"><input type="text" id="checkoutFirstName" placeholder="First name" class="w-full px-4 py-3 bg-lior-black border border-gray-700 rounded"><input type="text" id="checkoutLastName" placeholder="Last name" class="w-full px-4 py-3 bg-lior-black border border-gray-700 rounded"><input type="text" id="checkoutAddress" placeholder="Address" class="w-full px-4 py-3 bg-lior-black border border-gray-700 rounded col-span-2"><input type="text" id="checkoutCity" placeholder="City" class="w-full px-4 py-3 bg-lior-black border border-gray-700 rounded"><input type="text" id="checkoutPhone" placeholder="Phone" class="w-full px-4 py-3 bg-lior-black border border-gray-700 rounded"></div></div><div class="bg-lior-dark p-8 rounded-lg"><h3 class="font-serif text-xl font-bold mb-6">Payment</h3><button onclick="processCOD()" class="w-full border border-lior-accent text-lior-accent py-4 rounded-lg font-bold uppercase hover:bg-lior-accent hover:text-lior-black transition-all"><i class="fas fa-money-bill-wave mr-2"></i> Cash on Delivery</button></div></div><div class="lg:col-span-1"><div class="bg-lior-dark p-8 rounded-lg sticky top-32"><h3 class="font-serif text-xl font-bold mb-6">Order Summary</h3><div id="checkout-items" class="space-y-4 mb-6 max-h-64 overflow-y-auto"></div><div class="border-t border-gray-700 pt-4"><div class="flex justify-between text-xl font-bold"><span>Total</span><span id="checkout-total" class="text-lior-accent">LKR 0.00</span></div></div></div></div></div></div></section></div>
+
+    <!-- PRODUCT DETAIL PAGE -->
+    <div id="product-detail" class="page"><div class="close-product" onclick="showPage('collection')"><i class="fas fa-times text-xl"></i></div><div id="product-content"></div></div>
+
+    <!-- SEARCH PAGE -->
+    <div id="search" class="page"><div class="pt-32 pb-12 px-6 lg:px-8 bg-lior-dark"><div class="max-w-7xl mx-auto text-center"><h1 class="font-serif text-4xl md:text-5xl font-bold mb-4">SEARCH</h1><div class="max-w-xl mx-auto mt-8"><input type="text" id="search-input" placeholder="Search products..." onkeyup="performSearch()" class="w-full px-6 py-4 bg-lior-black border border-gray-700 rounded text-white"></div></div></div><section class="py-12 px-6 lg:px-8 bg-lior-black min-h-screen"><div class="max-w-7xl mx-auto"><div id="search-results" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8"></div></div></section></div>
+
+    <!-- ACCOUNT PAGE -->
+    <div id="account" class="page">
+        <div class="pt-32 pb-12 px-6 lg:px-8 bg-lior-dark"><div class="max-w-7xl mx-auto text-center"><h1 class="font-serif text-4xl md:text-5xl font-bold mb-4">MY ACCOUNT</h1></div></div>
+        <section class="py-20 px-6 lg:px-8 bg-lior-black min-h-screen">
+            <div class="max-w-md mx-auto">
+                <div id="loggedInView" class="hidden bg-lior-dark p-8 rounded-lg border border-gray-800 text-center">
+                    <i class="fas fa-check-circle text-5xl text-lior-accent mb-4"></i>
+                    <h2 class="font-serif text-2xl font-bold mb-2" id="loggedInUserName">Welcome!</h2>
+                    <p class="text-gray-400 mb-6" id="loggedInUserEmail"></p>
+                    <button onclick="logoutUser()" class="w-full border border-red-500 text-red-500 py-3 font-bold uppercase tracking-widest hover:bg-red-500 hover:text-white transition-colors rounded">Logout</button>
+                </div>
+                <div id="loginFormView" class="bg-lior-dark p-8 rounded-lg border border-gray-800">
+                    <div class="flex border-b border-gray-700 mb-6">
+                        <button id="loginTabBtn" onclick="switchAuthTab('login')" class="flex-1 py-3 text-center font-semibold text-lior-accent border-b-2 border-lior-accent">Login</button>
+                        <button id="registerTabBtn" onclick="switchAuthTab('register')" class="flex-1 py-3 text-center font-semibold text-gray-400 hover:text-white">Register</button>
+                    </div>
+                    <div id="loginForm"><form onsubmit="handleLogin(event)" class="space-y-4"><input type="email" id="loginEmail" placeholder="Email" required class="w-full px-4 py-3 bg-lior-black border border-gray-700 rounded text-white"><input type="password" id="loginPassword" placeholder="Password" required class="w-full px-4 py-3 bg-lior-black border border-gray-700 rounded text-white"><button type="submit" class="w-full bg-lior-accent text-lior-black py-4 font-bold uppercase tracking-widest hover:bg-white transition-colors rounded">Sign In</button></form></div>
+                    <div id="registerForm" class="hidden"><form onsubmit="handleRegister(event)" class="space-y-4"><input type="text" id="regFullName" placeholder="Full Name" required class="w-full px-4 py-3 bg-lior-black border border-gray-700 rounded text-white"><input type="email" id="regEmail" placeholder="Email" required class="w-full px-4 py-3 bg-lior-black border border-gray-700 rounded text-white"><input type="password" id="regPassword" placeholder="Password (min 4 characters)" required class="w-full px-4 py-3 bg-lior-black border border-gray-700 rounded text-white"><input type="password" id="regConfirmPassword" placeholder="Confirm Password" required class="w-full px-4 py-3 bg-lior-black border border-gray-700 rounded text-white"><button type="submit" class="w-full bg-lior-accent text-lior-black py-4 font-bold uppercase tracking-widest hover:bg-white transition-colors rounded">Create Account</button></form></div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="bg-lior-black border-t border-gray-800 pt-16 pb-8 px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+                <div><a href="#" onclick="showPage('home')" class="text-2xl font-serif font-bold tracking-wider mb-6 block store-name">LIOR <span class="text-lior-accent">CEYLON</span></a><p class="text-gray-400 text-sm mb-6">Premium streetwear from Sri Lanka. Est. 2023.</p><div class="flex space-x-4"><a href="#" target="_blank" class="social-facebook w-10 h-10 rounded-full bg-lior-dark flex items-center justify-center hover:bg-lior-accent hover:text-lior-black"><i class="fab fa-facebook-f"></i></a><a href="#" target="_blank" class="social-instagram w-10 h-10 rounded-full bg-lior-dark flex items-center justify-center hover:bg-lior-accent hover:text-lior-black"><i class="fab fa-instagram"></i></a><a href="#" target="_blank" class="social-tiktok w-10 h-10 rounded-full bg-lior-dark flex items-center justify-center hover:bg-lior-accent hover:text-lior-black"><i class="fab fa-tiktok"></i></a><a href="#" target="_blank" class="social-whatsapp w-10 h-10 rounded-full bg-lior-dark flex items-center justify-center hover:bg-lior-accent hover:text-lior-black"><i class="fab fa-whatsapp"></i></a></div></div>
+                <div><h4 class="font-bold uppercase tracking-widest text-sm mb-6">Shop</h4><ul class="space-y-3 text-gray-400 text-sm"><li><a href="#" onclick="showPage('new-arrivals')" class="hover:text-lior-accent">New Arrivals</a></li><li><a href="#" onclick="filterAndShow('oversized-tshirts')" class="hover:text-lior-accent">Oversized Tees</a></li><li><a href="#" onclick="filterAndShow('gym-wear')" class="hover:text-lior-accent">Gym Wear</a></li><li><a href="#" onclick="showPage('collection')" class="hover:text-lior-accent">All Products</a></li></ul></div>
+                <div><h4 class="font-bold uppercase tracking-widest text-sm mb-6">Help</h4><ul class="space-y-3 text-gray-400 text-sm"><li><a href="#" onclick="showPage('contact')" class="hover:text-lior-accent">Contact Us</a></li><li><a href="#" onclick="showPage('contact')" class="hover:text-lior-accent">Shipping</a></li><li><a href="#" onclick="showPage('contact')" class="hover:text-lior-accent">Returns</a></li></ul></div>
+                <div><h4 class="font-bold uppercase tracking-widest text-sm mb-6">Contact</h4><ul class="space-y-3 text-gray-400 text-sm"><li class="contact-address">Colombo, Sri Lanka</li><li class="contact-phone">+94 77 1544567</li><li class="contact-email">hello@liorceylon.lk</li></ul></div>
+            </div>
+            <div class="border-t border-gray-800 pt-8 text-center"><p class="text-gray-500 text-xs footer-copyright">&copy; 2026 LIOR CEYLON. All rights reserved. Sri Lanka</p><a href="admin.html" class="text-xs text-lior-accent hover:text-white mt-2 inline-block"><i class="fas fa-shield-alt mr-1"></i> Lior Ceylon</a></div>
+        </div>
+    </footer>
+
+    <script>
+        const FORMSPREE_URL = 'https://formspree.io/f/xpqkzqgb';
+        
+        let allProducts = [];
+        
+        function loadProducts() {
+            const stored = localStorage.getItem('lior_products');
+            if (stored && stored !== '[]') {
+                allProducts = JSON.parse(stored);
+            } else {
+                allProducts = [
+                    { id: 101, name: "Essential Oversized Tee", price: 4500, discountPrice: null, image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=600&q=80", category: "oversized-tshirts", badge: "New", hidden: false, description: "Premium oversized tee", sizePrices: { S:4500, M:4500, L:4500, XL:4500, XXL:4800 }, sizeStock: { S:true, M:true, L:true, XL:true, XXL:true } },
+                    { id: 102, name: "Performance Gym Shorts", price: 5500, discountPrice: null, image: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=600&q=80", category: "gym-wear", badge: "Hot", hidden: false, description: "High-performance gym shorts", sizePrices: { S:5500, M:5500, L:5500, XL:5500, XXL:5800 }, sizeStock: { S:true, M:true, L:true, XL:true, XXL:true } }
+                ];
+                localStorage.setItem('lior_products', JSON.stringify(allProducts));
+            }
+            return allProducts.filter(p => !p.hidden);
+        }
+
+        let categories = [];
+        function loadCategories() {
+            const stored = localStorage.getItem('lior_categories');
+            if (stored && stored !== '[]') categories = JSON.parse(stored);
+            else categories = [{ id: 1, name: "Oversized Tees", key: "oversized-tshirts" },{ id: 2, name: "Gym Wear", key: "gym-wear" },{ id: 3, name: "Office Wear", key: "office-wear" },{ id: 4, name: "Street Wear", key: "street-wear" },{ id: 5, name: "Hoodies", key: "hoodies" },{ id: 6, name: "Denim", key: "denim" },{ id: 7, name: "Socks", key: "socks" },{ id: 8, name: "Caps", key: "caps" }];
+            return categories;
+        }
+
+        let sliderImages = [];
+        function loadSliderImages() {
+            const stored = localStorage.getItem('lior_slider_images');
+            if (stored) sliderImages = JSON.parse(stored);
+            else sliderImages = ["https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=2000&q=80","https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=2000&q=80","https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=2000&q=80"];
+            return sliderImages;
+        }
+
+        function loadWebsiteSettings() {
+            const storeName = localStorage.getItem('store_name');
+            if(storeName) document.querySelectorAll('.store-name').forEach(el => { if(el.innerHTML.includes('LIOR')) el.innerHTML = storeName; });
+            const contactAddress = localStorage.getItem('contact_address');
+            if(contactAddress) document.querySelectorAll('.contact-address').forEach(el => el.textContent = contactAddress);
+            const contactPhone = localStorage.getItem('contact_phone');
+            if(contactPhone) document.querySelectorAll('.contact-phone').forEach(el => el.textContent = contactPhone);
+            const contactEmail = localStorage.getItem('contact_email');
+            if(contactEmail) document.querySelectorAll('.contact-email').forEach(el => el.textContent = contactEmail);
+            const socialFacebook = localStorage.getItem('social_facebook');
+            if(socialFacebook) document.querySelectorAll('.social-facebook').forEach(el => el.href = socialFacebook);
+            const socialInstagram = localStorage.getItem('social_instagram');
+            if(socialInstagram) document.querySelectorAll('.social-instagram').forEach(el => el.href = socialInstagram);
+            const socialTiktok = localStorage.getItem('social_tiktok');
+            if(socialTiktok) document.querySelectorAll('.social-tiktok').forEach(el => el.href = socialTiktok);
+            const socialWhatsapp = localStorage.getItem('social_whatsapp');
+            if(socialWhatsapp) document.querySelectorAll('.social-whatsapp').forEach(el => el.href = socialWhatsapp);
+            const footerCopyright = localStorage.getItem('footer_copyright');
+            if(footerCopyright) document.querySelectorAll('.footer-copyright').forEach(el => el.textContent = footerCopyright);
+            const shippingFee = localStorage.getItem('shipping_fee');
+            if(shippingFee && document.getElementById('shipping')) document.getElementById('shipping').innerHTML = `LKR ${parseInt(shippingFee).toLocaleString()}`;
+            const taxRate = localStorage.getItem('tax_rate');
+            if(taxRate) {
+                console.log('Tax rate set to:', taxRate);
+            }
+        }
+
+        let currentSlideIndex = 0;
+        let heroSlides = [];
+        
+        function initHeroSlider() {
+            const images = loadSliderImages();
+            const container = document.getElementById('heroSliderContainer');
+            const dotsContainer = document.getElementById('sliderDots');
+            if(!container) return;
+            container.innerHTML = '';
+            dotsContainer.innerHTML = '';
+            heroSlides = [];
+            images.forEach((img, idx) => {
+                const slideDiv = document.createElement('div');
+                slideDiv.className = `hero-slide ${idx === 0 ? 'active' : ''}`;
+                slideDiv.innerHTML = `<img src="${img}" class="w-full h-full object-cover opacity-60"><div class="absolute inset-0 bg-gradient-to-b from-lior-black via-transparent to-lior-black"></div><div class="absolute inset-0 flex items-center justify-center"><div class="text-center px-6 max-w-5xl"><p class="text-lior-accent uppercase tracking-[0.3em] text-sm mb-6">Premium Streetwear</p><h1 class="font-serif text-5xl md:text-7xl lg:text-8xl font-bold mb-6 leading-tight">DEFINE YOUR<br><span class="text-transparent bg-clip-text bg-gradient-to-r from-white to-lior-accent">STYLE</span></h1><button onclick="showPage('collection')" class="inline-block px-8 py-4 bg-lior-accent text-lior-black font-bold uppercase tracking-widest hover:bg-white transition-colors">Shop Now</button></div></div>`;
+                container.appendChild(slideDiv);
+                heroSlides.push(slideDiv);
+                const dot = document.createElement('button');
+                dot.className = `slider-dot ${idx === 0 ? 'active' : ''}`;
+                dot.onclick = () => goToSlide(idx);
+                dotsContainer.appendChild(dot);
+            });
+            window.goToSlide = function(n) {
+                heroSlides.forEach(slide => slide.classList.remove('active'));
+                document.querySelectorAll('.slider-dot').forEach(dot => dot.classList.remove('active'));
+                currentSlideIndex = n;
+                if(currentSlideIndex >= heroSlides.length) currentSlideIndex = 0;
+                if(currentSlideIndex < 0) currentSlideIndex = heroSlides.length - 1;
+                heroSlides[currentSlideIndex].classList.add('active');
+                if(document.querySelectorAll('.slider-dot')[currentSlideIndex]) document.querySelectorAll('.slider-dot')[currentSlideIndex].classList.add('active');
+            };
+            window.nextSlide = function() { goToSlide(currentSlideIndex + 1); };
+            window.prevSlide = function() { goToSlide(currentSlideIndex - 1); };
+            setInterval(() => { if(heroSlides.length > 0) nextSlide(); }, 6000);
+        }
+
+        function renderHomeCategories() {
+            const cats = loadCategories();
+            const container = document.getElementById('categoriesGrid');
+            if(!container) return;
+            
+            container.innerHTML = cats.slice(0,6).map(cat => {
+                const savedImage = localStorage.getItem(`category_image_${cat.key}`);
+                const defaultImage = "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=400&q=80";
+                const catImage = savedImage && savedImage !== 'null' ? savedImage : defaultImage;
+                
+                return `<button onclick="filterAndShow('${cat.key}')" class="group relative h-64 overflow-hidden text-left">
+                    <img src="${catImage}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" onerror="this.src='${defaultImage}'">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-80"></div>
+                    <div class="absolute bottom-0 left-0 p-4">
+                        <h3 class="font-bold text-sm uppercase">${cat.name}</h3>
+                    </div>
+                </button>`;
+            }).join('');
+        }
+        
+        function renderCategoryFilters() {
+            const cats = loadCategories();
+            const container = document.getElementById('categoryDropdown');
+            if(!container) return;
+            container.innerHTML = `<button onclick="filterProducts('all')" class="filter-btn px-6 py-2 border border-gray-600 text-sm uppercase tracking-widest hover:border-lior-accent hover:text-lior-accent rounded">ALL</button>` + cats.map(cat => `<button onclick="filterProducts('${cat.key}')" class="filter-btn px-6 py-2 border border-gray-600 text-sm uppercase tracking-widest hover:border-lior-accent hover:text-lior-accent rounded">${cat.name}</button>`).join('');
+        }
+
+        let currentUser = null;
+        let selectedSize = null;
+        
+        function showToast(msg) { const t=document.getElementById('toastMsg'); t.textContent=msg; t.style.display='block'; setTimeout(()=>t.style.display='none',3000); }
+        
+        function showPage(pageName) { 
+            document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); 
+            const target = document.getElementById(pageName);
+            if(target) target.classList.add('active');
+            window.scrollTo(0,0); 
+            if(pageName==='cart') renderCart(); 
+            if(pageName==='checkout') renderCheckout(); 
+            if(pageName==='collection') { renderProducts('all'); renderCategoryFilters(); }
+            if(pageName==='new-arrivals') renderNewArrivals(); 
+            if(pageName==='account') loadUserUI(); 
+        }
+        
+        function filterAndShow(category) { showPage('collection'); setTimeout(()=>renderProducts(category),100); }
+        
+        function getProductPrice(product, size) {
+            if(product.sizePrices && product.sizePrices[size]) return product.sizePrices[size];
+            if(product.discountPrice && product.discountPrice < product.price) return product.discountPrice;
+            return product.price;
+        }
+        
+        function renderFeatured() { 
+            const products = loadProducts();
+            const container = document.getElementById('featured-products'); 
+            if(container) container.innerHTML = products.slice(0,4).map(p => renderProductCard(p)).join(''); 
+        }
+        
+        function renderProductCard(p) {
+            const hasDiscount = p.discountPrice && p.discountPrice < p.price;
+            const displayPrice = hasDiscount ? p.discountPrice : p.price;
+            const originalPrice = p.price;
+            
+            return `<button onclick="showProduct(${p.id})" class="group text-left w-full">
+                <div class="relative overflow-hidden bg-lior-gray mb-4 rounded"><img src="${p.image}" class="w-full h-80 object-cover transition-transform group-hover:scale-110">${p.badge ? `<span class="absolute top-4 left-4 bg-lior-accent text-lior-black text-xs font-bold px-3 py-1 uppercase">${p.badge}</span>` : ''}</div>
+                <h3 class="font-serif text-lg font-semibold group-hover:text-lior-accent">${p.name}</h3>
+                ${hasDiscount ? 
+                    `<div class="flex items-center gap-2 mt-1">
+                        <span class="text-gray-400 line-through text-sm">LKR ${originalPrice.toLocaleString()}</span>
+                        <span class="text-lior-accent font-bold text-lg">LKR ${displayPrice.toLocaleString()}</span>
+                     </div>` : 
+                    `<p class="text-lior-accent font-bold mt-1">LKR ${displayPrice.toLocaleString()}</p>`
+                }
+            </button>`;
+        }
+        
+        function renderProducts(filter='all') { 
+            const products = loadProducts();
+            const container = document.getElementById('products-grid'); 
+            if(!container) return; 
+            const filtered = filter==='all' ? products : products.filter(p=>p.category===filter); 
+            container.innerHTML = filtered.map(p => renderProductCard(p)).join(''); 
+        }
+        
+        function renderNewArrivals() { 
+            const products = loadProducts();
+            const newProducts = products.filter(p=>p.badge==='New'); 
+            document.getElementById('new-arrivals-grid').innerHTML = newProducts.map(p => renderProductCard(p)).join(''); 
+        }
+        
+        function filterProducts(category) { renderProducts(category); }
+        function toggleCategoryDropdown() { const dropdown = document.getElementById('categoryDropdown'); const arrow = document.getElementById('dropdownArrow'); if(dropdown) dropdown.classList.toggle('show'); if(arrow) arrow.style.transform = dropdown?.classList.contains('show') ? 'rotate(180deg)' : 'rotate(0deg)'; }
+        
+        // ========== UPDATED showProduct WITH STOCK STATUS ==========
+        function showProduct(id) { 
+            const products = loadProducts();
+            const p = products.find(p=>p.id===id); 
+            const sizes = ['S','M','L','XL','XXL'];
+            const hasDiscount = p.discountPrice && p.discountPrice < p.price;
+            const displayPrice = hasDiscount ? p.discountPrice : p.price;
+            const originalPrice = p.price;
+            const sizeStock = p.sizeStock || {};
+            
+            const sizeButtons = sizes.map(s => {
+                const isInStock = sizeStock[s] !== false;
+                const stockClass = isInStock ? 'hover:border-lior-accent' : 'opacity-50 cursor-not-allowed bg-gray-800';
+                const stockDisabled = isInStock ? '' : 'disabled';
+                const stockAttr = isInStock ? `data-price="${getProductPrice(p, s)}"` : '';
+                const stockText = !isInStock ? '<span class="text-[10px] block text-red-400">Out</span>' : '';
+                
+                return `<button ${stockDisabled} onclick="${isInStock ? `selectSize(this, ${p.id})` : ''}" class="size-btn w-14 h-14 border border-gray-600 rounded flex items-center justify-center font-semibold ${stockClass}" data-size="${s}" ${stockAttr}>
+                    ${s}${stockText}
+                </button>`;
+            }).join('');
+            
+            document.getElementById('product-content').innerHTML = `<div class="pt-32 pb-20 px-6 lg:px-8 bg-lior-black"><div class="max-w-7xl mx-auto"><div class="grid grid-cols-1 lg:grid-cols-2 gap-12"><div class="aspect-square bg-lior-dark rounded-lg overflow-hidden"><img src="${p.image}" class="w-full h-full object-cover"></div><div class="lg:pl-12"><div><button onclick="showPage('collection')" class="text-lior-accent uppercase tracking-widest text-sm hover:underline">${p.category}</button><h1 class="font-serif text-4xl font-bold mt-2 mb-4">${p.name}</h1>${hasDiscount ? `<div class="mb-4"><span class="text-gray-400 line-through text-2xl">LKR ${originalPrice.toLocaleString()}</span><span class="text-lior-accent text-3xl font-bold ml-3">LKR ${displayPrice.toLocaleString()}</span></div>` : `<div class="text-3xl font-bold text-lior-accent mb-4" id="dynamicPrice">LKR ${displayPrice.toLocaleString()}</div>`}</div><p class="text-gray-300 mb-8">${p.description}</p><div class="mb-8"><label class="text-sm uppercase tracking-widest text-gray-400 mb-3">Select Size</label><div class="flex flex-wrap gap-3" id="size-selector">${sizeButtons}</div><p id="stockWarning" class="text-red-400 text-sm mt-2 hidden">Selected size is out of stock!</p></div><div class="flex gap-4"><div class="flex items-center border border-gray-700 rounded"><button onclick="updateQty(-1)" class="px-4 py-3 hover:text-lior-accent"><i class="fas fa-minus"></i></button><input type="number" id="qty" value="1" min="1" class="w-16 text-center bg-transparent border-x border-gray-700 py-3 text-white" readonly><button onclick="updateQty(1)" class="px-4 py-3 hover:text-lior-accent"><i class="fas fa-plus"></i></button></div><button onclick="addToCartFromDetail(${p.id})" id="addToCartBtn" class="flex-1 bg-lior-accent text-lior-black py-4 font-bold uppercase tracking-widest hover:bg-white rounded">Add to Cart</button></div></div></div></div></div>`;
+            showPage('product-detail'); 
+            window.currentProductId = p.id;
+        }
+        // ================================================================
+        
+        // ========== UPDATED selectSize WITH STOCK CHECK ==========
+        function selectSize(btn, productId) { 
+            if (btn.hasAttribute('disabled')) {
+                document.getElementById('stockWarning')?.classList.remove('hidden');
+                return;
+            }
+            document.getElementById('stockWarning')?.classList.add('hidden');
+            
+            document.querySelectorAll('.size-btn').forEach(b=>{
+                if (!b.hasAttribute('disabled')) {
+                    b.classList.remove('selected','bg-lior-accent','text-lior-black');
+                    b.classList.add('border-gray-600');
+                }
+            }); 
+            btn.classList.remove('border-gray-600'); 
+            btn.classList.add('selected','bg-lior-accent','text-lior-black'); 
+            selectedSize = btn.dataset.size;
+            const price = parseInt(btn.dataset.price);
+            if(document.getElementById('dynamicPrice')) document.getElementById('dynamicPrice').innerHTML = `LKR ${price.toLocaleString()}`;
+        }
+        // ================================================================
+        
+        function updateQty(change) { const input = document.getElementById('qty'); if(input) { let val = parseInt(input.value)+change; if(val<1) val=1; input.value=val; } }
+        
+        // ========== UPDATED addToCartFromDetail WITH STOCK CHECK ==========
+        function addToCartFromDetail(productId) { 
+            if(!selectedSize){ 
+                alert('Please select a size'); 
+                return; 
+            }
+            
+            const products = loadProducts();
+            const p = products.find(p=>p.id===productId);
+            const sizeStock = p.sizeStock || {};
+            if (sizeStock[selectedSize] === false) {
+                alert('Sorry, this size is out of stock!');
+                return;
+            }
+            
+            const qty = parseInt(document.getElementById('qty')?.value||1); 
+            const price = getProductPrice(p, selectedSize); 
+            addToCart(p, qty, selectedSize, price); 
+        }
+        // ================================================================
+        
+        function addToCart(p, qty=1, size=null, price=null) { 
+            let cart = JSON.parse(localStorage.getItem('lior_cart'))||[]; 
+            const finalPrice = price || (p.discountPrice && p.discountPrice < p.price ? p.discountPrice : p.price);
+            const useSize = size || selectedSize || 'M';
+            const existing = cart.find(i=>i.id===p.id&&i.size===useSize); 
+            if(existing) existing.quantity+=qty; 
+            else cart.push({...p, price: finalPrice, originalPrice: p.price, size: useSize, quantity: qty}); 
+            localStorage.setItem('lior_cart', JSON.stringify(cart)); 
+            updateCartCount(); 
+            showToast('Added to cart!'); 
+        }
+        
+        function renderCart() { 
+            const cart = JSON.parse(localStorage.getItem('lior_cart'))||[]; 
+            const container = document.getElementById('cart-items-container'); 
+            if(cart.length===0){ 
+                if(container) container.innerHTML=`<div class="text-center py-20"><i class="fas fa-shopping-bag text-6xl text-gray-700 mb-6"></i><h3 class="font-serif text-2xl font-bold mb-4">Cart empty</h3><button onclick="showPage('collection')" class="px-8 py-4 bg-lior-accent text-lior-black font-bold uppercase rounded">Start Shopping</button></div>`; 
+                const subtotalEl = document.getElementById('subtotal');
+                if(subtotalEl) subtotalEl.innerHTML = 'LKR 0.00';
+                const totalEl = document.getElementById('cart-total');
+                if(totalEl) totalEl.innerHTML = 'LKR 0.00';
+                return; 
+            } 
+            if(container) container.innerHTML = cart.map((item,idx)=>`<div class="flex gap-6 bg-lior-dark p-6 rounded border border-gray-800 mb-4"><img src="${item.image}" class="w-24 h-24 object-cover rounded"><div class="flex-1"><div class="flex justify-between"><h4 class="font-serif text-xl font-bold">${item.name}</h4><button onclick="removeItem(${idx})" class="text-gray-500 hover:text-red-500"><i class="fas fa-trash"></i></button></div><p class="text-gray-400 text-sm mb-2">Size: ${item.size}</p>${item.originalPrice && item.originalPrice > item.price ? `<div class="text-sm"><span class="original-price text-gray-500 line-through">LKR ${item.originalPrice.toLocaleString()}</span> <span class="text-lior-accent">LKR ${item.price.toLocaleString()}</span></div>` : ''}<div class="flex justify-between items-center mt-2"><div class="flex items-center space-x-3 bg-lior-black rounded-lg p-1"><button onclick="updateCartQuantity(${idx},-1)" class="w-8 h-8 flex items-center justify-center hover:text-lior-accent"><i class="fas fa-minus text-xs"></i></button><span class="font-bold w-8 text-center">${item.quantity}</span><button onclick="updateCartQuantity(${idx},1)" class="w-8 h-8 flex items-center justify-center hover:text-lior-accent"><i class="fas fa-plus text-xs"></i></button></div><span class="text-xl font-bold text-lior-accent">LKR ${(item.price*item.quantity).toLocaleString()}</span></div></div></div>`).join(''); 
+            const subtotal = cart.reduce((s,i)=>s+(i.price*i.quantity),0); 
+            const taxRate = parseFloat(localStorage.getItem('tax_rate')) || 0;
+            const tax = subtotal * (taxRate / 100);
+            const shippingFee = parseInt(localStorage.getItem('shipping_fee')) || 0;
+            const total = subtotal + tax + shippingFee; 
+            const subtotalEl = document.getElementById('subtotal');
+            if(subtotalEl) subtotalEl.innerHTML = `LKR ${subtotal.toLocaleString()}`;
+            const taxEl = document.getElementById('tax');
+            if(taxEl) taxEl.innerHTML = `LKR ${tax.toLocaleString()}`;
+            const totalEl = document.getElementById('cart-total');
+            if(totalEl) totalEl.innerHTML = `LKR ${total.toLocaleString()}`;
+        }
+        
+        function updateCartQuantity(idx,change) { let cart = JSON.parse(localStorage.getItem('lior_cart'))||[]; cart[idx].quantity+=change; if(cart[idx].quantity<=0) cart.splice(idx,1); localStorage.setItem('lior_cart', JSON.stringify(cart)); renderCart(); updateCartCount(); }
+        function removeItem(idx) { let cart = JSON.parse(localStorage.getItem('lior_cart'))||[]; cart.splice(idx,1); localStorage.setItem('lior_cart', JSON.stringify(cart)); renderCart(); updateCartCount(); }
+        function clearCart() { if(confirm('Clear cart?')){ localStorage.removeItem('lior_cart'); renderCart(); updateCartCount(); } }
+        function updateCartCount() { const cart = JSON.parse(localStorage.getItem('lior_cart'))||[]; document.getElementById('cart-count').textContent = cart.reduce((s,i)=>s+i.quantity,0); }
+        
+        function renderCheckout() { 
+            const cart = JSON.parse(localStorage.getItem('lior_cart'))||[]; 
+            if(cart.length===0){ showPage('cart'); return; } 
+            document.getElementById('checkout-items').innerHTML = cart.map(i=>`<div class="flex gap-4"><div class="relative"><img src="${i.image}" class="w-16 h-16 object-cover rounded"><span class="absolute -top-2 -right-2 w-5 h-5 bg-gray-600 rounded-full text-xs flex items-center justify-center">${i.quantity}</span></div><div><h4 class="font-semibold text-sm">${i.name}</h4><p class="text-gray-400 text-xs">Size: ${i.size}</p></div><span class="font-bold text-sm ml-auto">LKR ${(i.price*i.quantity).toLocaleString()}</span></div>`).join(''); 
+            const subtotal = cart.reduce((s,i)=>s+(i.price*i.quantity),0); 
+            const taxRate = parseFloat(localStorage.getItem('tax_rate')) || 0;
+            const tax = subtotal * (taxRate / 100);
+            const shippingFee = parseInt(localStorage.getItem('shipping_fee')) || 0;
+            const total = subtotal + tax + shippingFee; 
+            document.getElementById('checkout-total').textContent = `LKR ${total.toLocaleString()}`; 
+        }
+        
+        function processCOD() { 
+            const cart = JSON.parse(localStorage.getItem('lior_cart'))||[]; 
+            if(cart.length===0){ alert('Cart empty'); return; } 
+            const email = document.getElementById('checkoutEmail')?.value;
+            const firstName = document.getElementById('checkoutFirstName')?.value;
+            const lastName = document.getElementById('checkoutLastName')?.value;
+            const address = document.getElementById('checkoutAddress')?.value;
+            const city = document.getElementById('checkoutCity')?.value;
+            const phone = document.getElementById('checkoutPhone')?.value;
+            if(!email || !firstName){ alert('Please enter email and first name'); return; }
+            const subtotal = cart.reduce((s,i)=>s+(i.price*i.quantity),0);
+            const taxRate = parseFloat(localStorage.getItem('tax_rate')) || 0;
+            const tax = subtotal * (taxRate / 100);
+            const shippingFee = parseInt(localStorage.getItem('shipping_fee')) || 0;
+            const total = subtotal + tax + shippingFee;
+            const orderId = 'LIOR-' + Date.now();
+            const orderDate = new Date().toLocaleString();
+            
+            const orderItems = cart.map(item => `${item.name} (Size: ${item.size}, Qty: ${item.quantity}) - LKR ${(item.price * item.quantity).toLocaleString()}`).join('\n');
+            
+            fetch(FORMSPREE_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    _subject: `🛍️ NEW ORDER! ${orderId}`,
+                    orderId: orderId,
+                    customerName: `${firstName} ${lastName}`,
+                    customerEmail: email,
+                    customerPhone: phone,
+                    shippingAddress: `${address}, ${city}`,
+                    items: orderItems,
+                    subtotal: `LKR ${subtotal.toLocaleString()}`,
+                    tax: `LKR ${tax.toLocaleString()}`,
+                    shipping: `LKR ${shippingFee.toLocaleString()}`,
+                    total: `LKR ${total.toLocaleString()}`
+                })
+            }).catch(err => console.log('Email notification error:', err));
+            
+            let orders = JSON.parse(localStorage.getItem('lior_orders'))||[];
+            orders.unshift({id:orderId,date:orderDate,customerName:`${firstName} ${lastName}`,customerEmail:email,phone,address:`${address}, ${city}`,items:cart,total,status:'Pending'});
+            localStorage.setItem('lior_orders',JSON.stringify(orders));
+            showToast(`Order Confirmed! Order ID: ${orderId}`);
+            localStorage.removeItem('lior_cart');
+            updateCartCount();
+            showPage('home');
+        }
+        
+        function sendContact(e) { 
+            e.preventDefault(); 
+            const firstName = document.getElementById('contactFirstName')?.value;
+            const lastName = document.getElementById('contactLastName')?.value;
+            const email = document.getElementById('contactEmailField')?.value;
+            const phone = document.getElementById('contactPhoneField')?.value;
+            const message = document.getElementById('contactMessage')?.value;
+            const fullName = `${firstName} ${lastName}`;
+            
+            fetch(FORMSPREE_URL, {
+                method: 'POST', 
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    _subject: `📧 Contact Form Message from ${fullName}`,
+                    name: fullName,
+                    email: email,
+                    phone: phone,
+                    message: message,
+                    type: 'contact_form'
+                })
+            }).then(() => { 
+                showToast('Message sent successfully! We will get back to you soon.'); 
+                document.getElementById('contactForm').reset(); 
+            })
+            .catch(() => { 
+                showToast('Message sent! We will get back to you soon.'); 
+                document.getElementById('contactForm').reset(); 
+            });
+        }
+        
+        function performSearch() { const q = document.getElementById('search-input')?.value.toLowerCase()||''; const products = loadProducts(); const results = products.filter(p=>p.name.toLowerCase().includes(q)); document.getElementById('search-results').innerHTML = results.length?results.map(p=>renderProductCard(p)).join(''):'<p class="text-gray-400 text-center">No products found.</p>'; }
+        
+        function handleSubscribe(e) { 
+            e.preventDefault(); 
+            const email = document.getElementById('subscribeEmail').value; 
+            fetch(FORMSPREE_URL, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    _subject: '📧 New Newsletter Subscription',
+                    email: email,
+                    type: 'newsletter'
+                })
+            }).catch(()=>{}); 
+            showToast('Subscribed successfully!'); 
+            e.target.reset(); 
+        }
+        
+        function handleRegister(e) { 
+            e.preventDefault(); 
+            const name=document.getElementById('regFullName').value; 
+            const email=document.getElementById('regEmail').value; 
+            const pass=document.getElementById('regPassword').value; 
+            const cpass=document.getElementById('regConfirmPassword')?.value; 
+            if(pass!==cpass){ alert('Passwords do not match'); return; } 
+            let users=JSON.parse(localStorage.getItem('lior_users'))||[]; 
+            if(users.find(u=>u.email===email)){ alert('Email already exists'); return; } 
+            const newUser={id:Date.now(), name, email, password:pass, phone:'', address:''}; 
+            users.push(newUser); 
+            localStorage.setItem('lior_users',JSON.stringify(users)); 
+            localStorage.setItem('lior_current_user',JSON.stringify({id:newUser.id, name, email})); 
+            
+            fetch(FORMSPREE_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    _subject: `👤 New User Registered: ${name}`,
+                    name: name,
+                    email: email,
+                    type: 'new_user'
+                })
+            }).catch(err => console.log('Email error:', err));
+            
+            showToast('Registration successful! Welcome!'); 
+            loadUserUI(); 
+            showPage('home'); 
+        }
+        
+        function loadUserUI() { 
+            const user = JSON.parse(localStorage.getItem('lior_current_user')); 
+            const lgv=document.getElementById('loggedInView'); 
+            const lfv=document.getElementById('loginFormView'); 
+            const sd=document.getElementById('userStatusDot'); 
+            if(user){ 
+                if(lgv) lgv.classList.remove('hidden'); 
+                if(lfv) lfv.classList.add('hidden'); 
+                document.getElementById('loggedInUserName').innerText=`Welcome, ${user.name}!`; 
+                document.getElementById('loggedInUserEmail').innerText=user.email; 
+                if(sd) sd.className='absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full'; 
+            } else { 
+                if(lgv) lgv.classList.add('hidden'); 
+                if(lfv) lfv.classList.remove('hidden'); 
+                if(sd) sd.className='absolute -top-1 -right-1 w-2 h-2 bg-gray-500 rounded-full'; 
+                switchAuthTab('login');
+            } 
+        }
+        
+        function switchAuthTab(tab) {
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            const loginTab = document.getElementById('loginTabBtn');
+            const registerTab = document.getElementById('registerTabBtn');
+            if(tab === 'login') {
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
+                loginTab.classList.add('text-lior-accent', 'border-lior-accent');
+                loginTab.classList.remove('text-gray-400', 'border-transparent');
+                registerTab.classList.add('text-gray-400');
+                registerTab.classList.remove('text-lior-accent', 'border-lior-accent');
+            } else {
+                loginForm.classList.add('hidden');
+                registerForm.classList.remove('hidden');
+                registerTab.classList.add('text-lior-accent', 'border-lior-accent');
+                registerTab.classList.remove('text-gray-400', 'border-transparent');
+                loginTab.classList.add('text-gray-400');
+                loginTab.classList.remove('text-lior-accent', 'border-lior-accent');
+            }
+        }
+        
+        function handleLogin(e) { 
+            e.preventDefault(); 
+            const email=document.getElementById('loginEmail').value; 
+            const pass=document.getElementById('loginPassword').value; 
+            const users=JSON.parse(localStorage.getItem('lior_users'))||[]; 
+            const user=users.find(u=>u.email===email && u.password===pass); 
+            if(user){ 
+                localStorage.setItem('lior_current_user',JSON.stringify({id:user.id, name:user.name, email:user.email})); 
+                showToast(`Welcome back ${user.name}!`); 
+                loadUserUI(); 
+                showPage('home'); 
+            } else { 
+                alert('Invalid email or password'); 
+            } 
+        }
+        
+        function logoutUser() { 
+            localStorage.removeItem('lior_current_user'); 
+            loadUserUI(); 
+            showPage('home'); 
+        }
+        
+        document.addEventListener('DOMContentLoaded',()=>{ 
+            initHeroSlider();
+            renderHomeCategories();
+            renderFeatured(); 
+            updateCartCount(); 
+            loadUserUI();
+            loadWebsiteSettings();
+            const observer = new IntersectionObserver((entries)=>{ entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('active'); }); },{threshold:0.1}); 
+            document.querySelectorAll('.scroll-reveal').forEach(el=>observer.observe(el)); 
+        });
+    </script>
+</body>
+</html>
